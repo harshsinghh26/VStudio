@@ -3,13 +3,17 @@
   "version": "1.0.0",
   "description": "A backend project based on youtube and twtter",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon /index.js"
   },
   "keywords": [
     "JavaScript",
     "Backend"
   ],
   "author": "Harsh",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
 }
