@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { userRegistration } from '../controllers/user.controller.js';
+import {
+  userLogin,
+  userLogout,
+  userRegistration,
+} from '../controllers/user.controller.js';
+import { verifyJWT } from '../middlewares/auth.middlewares.js';
 
 import { upload } from '../middlewares/multer.middlewares.js';
 
@@ -16,7 +21,10 @@ router.route('/register').post(
       maxCount: 1,
     },
   ]),
+
   userRegistration,
 );
+router.route('/login').post(userLogin);
+router.route('/logout').post(verifyJWT, userLogout);
 
 export default router;

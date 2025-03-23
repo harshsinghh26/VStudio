@@ -4,6 +4,27 @@ import { User } from '../models/users.models.js';
 import { uploadOnCloudinary } from '../utils/Cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
+//Generate Tokens
+
+const generateAccessAndRefreshToken = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(
+      500,
+      'Something went wrong while genrating access token and refresh token',
+    );
+  }
+};
+
+// User Registration
+
 const userRegistration = asyncHandler(async (req, res) => {
   //get user details from frantend
   // validation - not empty
@@ -31,8 +52,17 @@ const userRegistration = asyncHandler(async (req, res) => {
   }
 
   const avatarFilePath = req.files?.avatar[0]?.path;
-  const coverImageFilePath = req.files?.coverImage[0]?.path;
+  //   const coverImageFilePath = req.files?.coverImage[0]?.path;
   //   console.log(req.files);
+
+  let coverImageFilePath;
+  if (
+    req.files &&
+    Array.isArray(req.files.coverImage) &&
+    req.files.coverImage.length > 0
+  ) {
+    coverImageFilePath = req.files.coverImage[0].path;
+  }
 
   if (!avatarFilePath) {
     throw new ApiError(400, 'avatar is required');
@@ -67,4 +97,93 @@ const userRegistration = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, createdUser, 'User Created Succesfully'));
 });
 
-export { userRegistration };
+// User Login
+
+const userLogin = asyncHandler(async (req, res) => {
+  // user data -> req.body
+  //user exist
+  //password right or wrong
+  //generate AT and RT
+  // send in form cokiee
+
+  const { username, email, password } = req.body;
+  //   console.log(email);
+
+  if (!(username || email)) {
+    throw new ApiError(400, 'please enter username or email!');
+  }
+
+  //   console.log(req.body);
+  const user = await User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  if (!user) {
+    throw new ApiError(404, 'User not Found!');
+  }
+  const ispassword = await user.isPasswordCorrect(password);
+
+  //   console.log(ispassword);
+  if (!ispassword) {
+    throw new ApiError(401, 'Incorrect user Credential');
+  }
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+    user._id,
+  );
+
+  const loggedInUser = await User.findById(user._id).select(
+    '-password -refreshToken',
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .cookie('accessToken', accessToken, options)
+    .cookie('refreshToken', refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: loggedInUser,
+          accessToken,
+          refreshToken,
+        },
+        'User Logged In Succesfully!',
+      ),
+    );
+});
+
+// User Logout
+
+const userLogout = asyncHandler(async (req, res) => {
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        refreshToken: undefined,
+      },
+    },
+    {
+      new: true,
+    },
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie('accessToken', options)
+    .clearCookie('refreshToken', options)
+    .json(new ApiResponse(200, {}, 'User Loged Out!'));
+});
+
+// Export
+
+export { userRegistration, userLogin, userLogout };
