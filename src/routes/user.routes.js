@@ -42,9 +42,9 @@ router
   .route('/update-avatar')
   .patch(verifyJWT, upload.single('avatar'), updateUserAvatar);
 router
-  .route('update-coverimage')
+  .route('/update-coverimage')
   .patch(verifyJWT, upload.single('coverImage'), updateCoverImage);
 router.route('/c/:username').get(verifyJWT, userSubscription);
-router.route('/get-userhistory').get(verifyJWT, getWatchHistory);
+router.route('/watch-history').get(verifyJWT, getWatchHistory);
 
 export default router;

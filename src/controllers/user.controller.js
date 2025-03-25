@@ -242,7 +242,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(401, 'Password is Incorrect!');
   }
 
-  user.oldPassword = newPassword;
+  user.password = newPassword;
 
   await user.save({ validateBeforeSave: false });
 
@@ -378,14 +378,14 @@ const userSubscription = asyncHandler(async (req, res) => {
     {
       $addFields: {
         subscriberCount: {
-          $size: 'subscribers',
+          $size: '$subscribers',
         },
         subscribedCount: {
-          $size: 'subscribed',
+          $size: '$subscribed',
         },
         isSubscribed: {
           $cond: {
-            if: { $in: [req.user?._id, 'subscribers.subscriber'] },
+            if: { $in: [req.user?._id, '$subscribers.subscriber'] },
             then: true,
             else: false,
           },
@@ -429,7 +429,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         from: 'videos',
         localField: 'watchHistory',
         foreignField: '_id',
-        as: 'watchhistory',
+        as: 'watchHistory',
         pipeline: [
           {
             $lookup: {
@@ -464,7 +464,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        user[0].watchhistory,
+        user[0].watchHistory,
         'Watch history fetched Successfully!',
       ),
     );
