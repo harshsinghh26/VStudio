@@ -186,7 +186,7 @@ const userLogout = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, 'User Loged Out!'));
 });
 
-//new Refresh Token
+//New Refresh Token
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken =
@@ -314,7 +314,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, 'Avatar updated Successfully!'));
 });
 
-// change Cover Image
+// Change Cover Image
 
 const updateCoverImage = asyncHandler(async (req, res) => {
   const coverImageLocalPath = req.file?.path;
@@ -418,7 +418,7 @@ const userSubscription = asyncHandler(async (req, res) => {
 // Get Watch history
 
 const getWatchHistory = asyncHandler(async (req, res) => {
-  const user = User.aggregate([
+  const user = await User.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(req.user._id),
